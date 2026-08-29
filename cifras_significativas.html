@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analizador de Cifras y Base 10</title>
+  
+  <style>
+    :root {
+      --bg-color: #f0f4f8;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --text-muted: #64748b;
+      --primary: #0078D7;
+      --primary-hover: #106ebe;
+      --accent: #2B882B;
+      --border-color: #cbd5e1;
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      padding: 30px 15px;
+      line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 520px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    header h1 {
+      color: var(--primary);
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 25px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.88rem;
+      margin-bottom: 6px;
+      color: var(--text-color);
+    }
+
+    input {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+      text-align: center;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 120, 215, 0.15);
+    }
+
+    .btn-main {
+      margin-top: 10px;
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-main:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .login-error {
+      background-color: #fef2f2;
+      border: 1px solid #ef4444;
+      color: #991b1b;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      margin-bottom: 15px;
+      display: none;
+    }
+
+    .user-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .btn-logout {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .btn-logout:hover {
+      text-decoration: underline;
+    }
+
+    .result-container {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    #etiqueta_cs {
+      font-size: 1.15rem;
+      font-weight: bold;
+      color: var(--primary);
+      min-height: 25px;
+    }
+
+    #etiqueta_b10 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: var(--accent);
+      min-height: 30px;
+    }
+
+    #etiqueta_detalle {
+      font-size: 0.88rem;
+      font-style: italic;
+      color: var(--text-muted);
+      min-height: 20px;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <div id="loginView" class="view active">
+      <header>
+        <h1>🔐 Acceso al Analizador</h1>
+        <p>Ingrese cualquier usuario y contraseña para continuar</p>
+      </header>
+
+      <div class="card">
+        <div class="login-error" id="loginError">Por favor, rellene ambos campos.</div>
+        
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" placeholder="Cualquier usuario" required>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" placeholder="Cualquier contraseña" required>
+          </div>
+
+          <button type="submit" class="btn-main">Iniciar Sesión</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="appView" class="view">
+      <header>
+        <h1>📊 Analizador de Cifras y Base 10</h1>
+        <p>Herramienta web de cálculo matemático</p>
+      </header>
+
+      <div class="user-info">
+        <span>Usuario: <strong id="userDisplay">Invitado</strong></span>
+        <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
+      </div>
+
+      <div class="card">
+        <div class="form-group">
+          <label for="entrada_txt">Ingresa una cantidad (entero o decimal):</label>
+          <input type="text" id="entrada_txt" placeholder="Ej: 0.0045 o 12300" autocomplete="off">
+        </div>
+
+        <button type="button" class="btn-main" onclick="calcular()">Procesar Cantidad</button>
+
+        <div class="result-container">
+          <div id="etiqueta_cs"></div>
+          <div id="etiqueta_b10"></div>
+          <div id="etiqueta_detalle"></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 - Aplicación Web Interactiva</p>
+    </footer>
+  </div>
+
+  <script>
+    function handleLogin(event) {
+      event.preventDefault();
+      const user = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value.trim();
+      const errorBox = document.getElementById('loginError');
+
+      if (user !== "" && pass !== "") {
+        errorBox.style.display = 'none';
+        document.getElementById('userDisplay').textContent = user;
+        
+        document.getElementById('loginView').classList.remove('active');
+        document.getElementById('appView').classList.add('active');
+        
+        document.getElementById('loginForm').reset();
+        document.getElementById('entrada_txt').focus();
+      } else {
+        errorBox.style.display = 'block';
+      }
+    }
+
+    function handleLogout() {
+      document.getElementById('appView').classList.remove('active');
+      document.getElementById('loginView').classList.add('active');
+      
+      document.getElementById('etiqueta_cs').textContent = "";
+      document.getElementById('etiqueta_b10').textContent = "";
+      document.getElementById('etiqueta_detalle').textContent = "";
+      document.getElementById('entrada_txt').value = "";
+    }
+
+    function procesarMatematica(cantidadStr) {
+      const numOriginal = cantidadStr.trim();
+      const esNegativo = numOriginal.startsWith('-');
+      const numLimpio = numOriginal.replace(',', '.').replace(/^[\+\-]+/, '');
+
+      const regex = /^\d*\.?\d+$/;
+      if (!regex.test(numLimpio) || numLimpio === '.' || numLimpio === '') {
+        return { cifras: null, base10: "Error: Entrada no válida.", detalle: "" };
+      }
+      
+      if (parseFloat(numLimpio) === 0) {
+        return { cifras: 1, base10: "0.0 × 10⁰", detalle: "El cero absoluto tiene 1 cifra significativa." };
+      }
+
+      let numProcesado = "";
+      let cifras = 0;
+
+      if (numLimpio.startsWith('0.')) {
+        numProcesado = numLimpio.replace(/^0\.0*/, '');
+        cifras = numProcesado.length;
+      } else if (numLimpio.includes('.')) {
+        numProcesado = numLimpio.replace('.', '');
+        cifras = numProcesado.length;
+      } else {
+        numProcesado = numLimpio.replace(/0+$/, '');
+        cifras = numProcesado.length;
+      }
+
+      const valFloat = parseFloat(numLimpio);
+      const exponente = Math.floor(Math.log10(valFloat));
+      const coeficiente = valFloat / Math.pow(10, exponente);
+      
+      const decimales = cifras - 1;
+      const signoStr = esNegativo ? "-" : "";
+      
+      const superindices = {"-": "⁻", "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹"};
+      const expStr = String(exponente).split('').map(c => superindices[c] || c).join('');
+      
+      const coeficienteFormateado = decimales >= 0 ? coeficiente.toFixed(decimales) : coeficiente.toString();
+      const base10Formateada = `${signoStr}${coeficienteFormateado} × 10${expStr}`;
+      let detalle = `Dígitos significativos: ${numProcesado}`;
+      
+      if (!numOriginal.includes('.') && !numOriginal.includes(',') && numOriginal.endsWith('0')) {
+        detalle = `Nota: Ceros finales en enteros son ambiguos. Se asumen: ${cifras} CS`;
+      }
+
+      return { cifras: cifras, base10: base10Formateada, detalle: detalle };
+    }
+
+    function calcular() {
+      const entrada = document.getElementById('entrada_txt').value;
+      const lblCs = document.getElementById('etiqueta_cs');
+      const lblB10 = document.getElementById('etiqueta_b10');
+      const lblDetalle = document.getElementById('etiqueta_detalle');
+
+      if (!entrada.trim()) {
+        alert("Por favor, ingresa una cantidad.");
+        return;
+      }
+        
+      const resultado = procesarMatematica(entrada);
+      
+      if (resultado.cifras === null) {
+        lblCs.textContent = resultado.base10;
+        lblCs.style.color = "red";
+        lblB10.textContent = "";
+        lblDetalle.textContent = "";
+      } else {
+        lblCs.textContent = `Cifras Significativas: ${resultado.cifras}`;
+        lblCs.style.color = "var(--primary)";
+        lblB10.textContent = `Base 10: ${resultado.base10}`;
+        lblDetalle.textContent = resultado.detalle;
+      }
+    }
+
+    document.getElementById('entrada_txt').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        calcular();
+      }
+    });
+  </script>
+
+</body>
+</html>
